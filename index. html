@@ -1,585 +1,87 @@
-<!DOCTYPE html>
-<html lang="sd" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="theme-color" content="#087f5b">
-<meta name="description" content="Abrar Khaskheli Land Portal">
-<title>Abrar Khaskheli Portal</title>
+src="/mnt/data/Abrar_Khaskheli_Portal_v7_Professional_Search_Logos.zip"
+out="/mnt/data/Abrar_Khaskheli_Portal_v8_Offline_Professional.zip"
+work="/mnt/data/ak_portal_v8"
+if os.path.exists(work): shutil.rmtree(work)
+os.makedirs(work)
+with zipfile.ZipFile(src) as z: z.extractall(work)
 
-<style>
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Arial,"Noto Sans Arabic",sans-serif;
-  background:#f1f5f9;
-  color:#172033;
-}
-header{
-  background:linear-gradient(135deg,#087f5b,#0b7285);
-  color:white;
-  padding:22px 15px;
-  text-align:center;
-}
-header h1{margin:0;font-size:26px}
-header p{margin:7px 0 0}
-.container{max-width:900px;margin:auto;padding:15px}
-.card{
-  background:white;
-  border-radius:16px;
-  padding:18px;
-  margin:14px 0;
-  box-shadow:0 4px 15px #0001;
-}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-  gap:12px;
-}
-button,.btn{
-  border:0;
-  border-radius:12px;
-  padding:13px;
-  background:#087f5b;
-  color:white;
-  cursor:pointer;
-  font-size:15px;
-}
-button:hover{opacity:.9}
-input,select{
-  width:100%;
-  padding:12px;
-  border:1px solid #ccd3da;
-  border-radius:10px;
-  margin:6px 0 12px;
-  font-size:15px;
-}
-.stat{
-  background:#e7f5ef;
-  border-radius:14px;
-  padding:15px;
-  text-align:center;
-}
-.stat b{display:block;font-size:23px;color:#087f5b}
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:10px;
-}
-th,td{
-  border-bottom:1px solid #ddd;
-  padding:9px;
-  text-align:center;
-}
-th{background:#087f5b;color:white}
-.danger{background:#c92a2a}
-.blue{background:#1971c2}
-.dark{background:#343a40}
-.social{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  justify-content:center;
-}
-.social a{
-  display:flex;
-  align-items:center;
-  gap:7px;
-  text-decoration:none;
-  color:white;
-  padding:11px 16px;
-  border-radius:12px;
-}
-.fb{background:#1877f2}
-.wa{background:#25d366}
-.social img{width:24px;height:24px}
-#offline{
-  display:none;
-  background:#c92a2a;
-  color:white;
-  padding:8px;
-  text-align:center;
-}
-footer{text-align:center;padding:25px;color:#666}
-.hidden{display:none}
+index=os.path.join(work,"index.html")
+with open(index,encoding="utf-8") as f: html=f.read()
+
+css=r"""
+<style id="v8-offline-css">
+.v8-offline{display:flex;align-items:center;gap:8px;justify-content:center;padding:9px 12px;margin:10px auto;max-width:620px;border-radius:12px;font-weight:700;background:#eaf7ef;color:#146c3a;border:1px solid #bfe6ce}
+.v8-dot{width:10px;height:10px;border-radius:50%;background:#25a55f;display:inline-block}
+.v8-offline.offline{background:#fff4e5;color:#8a5200;border-color:#f1d29a}.v8-offline.offline .v8-dot{background:#f0a202}
 </style>
-</head>
+"""
+if "v8-offline-css" not in html:
+    html=html.replace("</head>",css+"</head>",1)
 
-<body>
+banner="""<div id="v8OfflineStatus" class="v8-offline"><span class="v8-dot"></span><span id="v8OfflineText">🟢 Offline mode ready</span></div>"""
+if 'id="v8OfflineStatus"' not in html:
+    # Place after header if possible, otherwise at top of body.
+    html=html.replace("</header>", "</header>"+banner, 1)
+    if 'id="v8OfflineStatus"' not in html:
+        html=html.replace("<body>", "<body>"+banner, 1)
 
-<div id="offline">Offline Mode — Internet موجود ناهي</div>
-
-<header>
-  <h1 id="title">Abrar Khaskheli</h1>
-  <p id="subtitle">Zameen & Account Portal</p>
-</header>
-
-<div class="container">
-
-<div class="card">
-  <label>Language / ٻولي / زبان</label>
-  <select id="language" onchange="changeLanguage()">
-    <option value="sd">سنڌي</option>
-    <option value="ur">اردو</option>
-    <option value="en">English</option>
-  </select>
-</div>
-
-<div class="card">
-  <h2 id="dashboard">Dashboard</h2>
-
-  <div class="grid">
-    <div class="stat">
-      <span id="landText">Land Records</span>
-      <b id="landCount">0</b>
-    </div>
-
-    <div class="stat">
-      <span id="incomeText">Income</span>
-      <b id="incomeTotal">0</b>
-    </div>
-
-    <div class="stat">
-      <span id="expenseText">Expense</span>
-      <b id="expenseTotal">0</b>
-    </div>
-
-    <div class="stat">
-      <span id="balanceText">Balance</span>
-      <b id="balance">0</b>
-    </div>
-  </div>
-</div>
-
-<div class="card">
-<h2 id="landTitle">Land Records</h2>
-
-<input id="search" placeholder="Search..." oninput="renderLand()">
-
-<input id="owner" placeholder="Owner Name">
-<input id="area" type="number" placeholder="Area">
-<input id="unit" placeholder="Unit (Acre / Kanal / Marla)">
-
-<button onclick="addLand()" id="addLandBtn">Add Record</button>
-
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Area</th>
-<th>Unit</th>
-<th>Action</th>
-</tr>
-</thead>
-<tbody id="landTable"></tbody>
-</table>
-</div>
-
-<div class="card">
-<h2 id="calcTitle">Land Calculator</h2>
-
-<input id="length" type="number" placeholder="Length">
-<input id="width" type="number" placeholder="Width">
-
-<button onclick="calculate()" id="calcBtn">Calculate</button>
-
-<h3 id="result">Result: 0</h3>
-</div>
-
-<div class="card">
-<h2 id="moneyTitle">Income / Expense</h2>
-
-<select id="moneyType">
-<option value="income">Income</option>
-<option value="expense">Expense</option>
-</select>
-
-<input id="moneyAmount" type="number" placeholder="Amount">
-<input id="moneyNote" placeholder="Note">
-
-<button onclick="addMoney()" id="moneyBtn">Add</button>
-
-<table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Amount</th>
-<th>Note</th>
-<th>Delete</th>
-</tr>
-</thead>
-<tbody id="moneyTable"></tbody>
-</table>
-</div>
-
-<div class="card">
-<h2>Backup / Restore</h2>
-
-<div class="grid">
-<button onclick="backup()">Backup</button>
-
-<button class="blue" onclick="document.getElementById('restoreFile').click()">
-Restore
-</button>
-
-<button class="dark" onclick="window.print()">
-PDF / Print
-</button>
-</div>
-
-<input id="restoreFile" type="file" accept=".json"
-       class="hidden" onchange="restore(event)">
-</div>
-
-<div class="card">
-<h2>Security</h2>
-
-<input id="pin" type="password" maxlength="6"
-       placeholder="Set PIN">
-
-<button onclick="setPin()">Save / Change PIN</button>
-</div>
-
-<div class="card">
-<h2>Search Portal</h2>
-
-<input id="portalSearch"
-       placeholder="Google search..."
-       onkeydown="if(event.key==='Enter')searchWeb()">
-
-<button onclick="searchWeb()">Search</button>
-</div>
-
-<div class="card">
-<h2>Contact</h2>
-
-<div class="social">
-
-<a class="fb"
-   href="https://www.facebook.com/search/top?q=Abrar%20Khaskheli"
-   target="_blank">
-<img src="facebook.png" alt="Facebook">
-Facebook
-</a>
-
-<a class="wa"
-   href="https://wa.me/923173796981"
-   target="_blank">
-<img src="whatsapp.png" alt="WhatsApp">
-WhatsApp
-</a>
-
-</div>
-</div>
-
-</div>
-
-<footer>
-© 2026 Abrar Khaskheli Portal
-</footer>
-
-<script>
-
-let lands=JSON.parse(localStorage.getItem("lands")||"[]");
-let money=JSON.parse(localStorage.getItem("money")||"[]");
-
-const text={
-sd:{
-title:"Abrar Khaskheli",
-subtitle:"زمين ۽ حساب ڪتاب پورٽل",
-dashboard:"ڊيش بورڊ",
-land:"زمين جا رڪارڊ",
-income:"آمدني",
-expense:"خرچ",
-balance:"بيلنس",
-calc:"زمين جو حساب",
-money:"آمدني / خرچ",
-add:"رڪارڊ شامل ڪريو",
-search:"ڳولا ڪريو"
-},
-ur:{
-title:"Abrar Khaskheli",
-subtitle:"زمین اور حساب کتاب پورٹل",
-dashboard:"ڈیش بورڈ",
-land:"زمین کے ریکارڈ",
-income:"آمدنی",
-expense:"خرچ",
-balance:"بیلنس",
-calc:"زمین کا حساب",
-money:"آمدنی / خرچ",
-add:"ریکارڈ شامل کریں",
-search:"تلاش کریں"
-},
-en:{
-title:"Abrar Khaskheli",
-subtitle:"Land & Account Portal",
-dashboard:"Dashboard",
-land:"Land Records",
-income:"Income",
-expense:"Expense",
-balance:"Balance",
-calc:"Land Calculator",
-money:"Income / Expense",
-add:"Add Record",
-search:"Search"
-}
-};
-
-function save(){
- localStorage.setItem("lands",JSON.stringify(lands));
- localStorage.setItem("money",JSON.stringify(money));
-}
-
-function addLand(){
- let owner=document.getElementById("owner").value.trim();
- let area=document.getElementById("area").value;
- let unit=document.getElementById("unit").value.trim();
-
- if(!owner || !area){
-   alert("Please enter owner and area");
-   return;
+js=r"""
+<script id="v8-offline-js">
+(function(){
+ const status=document.getElementById('v8OfflineStatus'), text=document.getElementById('v8OfflineText');
+ function update(){
+   const on=navigator.onLine;
+   status.classList.toggle('offline',!on);
+   text.textContent=on?'🟢 Online — Offline mode ready':'🟠 Offline mode — توهان جو portal local طور ڪم ڪري رهيو آهي';
  }
-
- lands.push({owner,area,unit});
- save();
-
- document.getElementById("owner").value="";
- document.getElementById("area").value="";
- document.getElementById("unit").value="";
-
- renderLand();
- updateDashboard();
-}
-
-function renderLand(){
- let q=document.getElementById("search").value.toLowerCase();
- let html="";
-
- lands.forEach((x,i)=>{
-   if(
-     x.owner.toLowerCase().includes(q) ||
-     x.unit.toLowerCase().includes(q)
-   ){
-     html+=`
-     <tr>
-       <td>${x.owner}</td>
-       <td>${x.area}</td>
-       <td>${x.unit}</td>
-       <td>
-       <button class="danger" onclick="deleteLand(${i})">
-       Delete
-       </button>
-       </td>
-     </tr>`;
-   }
- });
-
- document.getElementById("landTable").innerHTML=html;
-}
-
-function deleteLand(i){
- if(confirm("Delete this record?")){
-   lands.splice(i,1);
-   save();
-   renderLand();
-   updateDashboard();
+ window.addEventListener('online',update); window.addEventListener('offline',update); update();
+ // Register the service worker so the app shell and local assets remain available offline.
+ if('serviceWorker' in navigator){
+   window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
  }
-}
-
-function addMoney(){
-
- let type=document.getElementById("moneyType").value;
- let amount=Number(document.getElementById("moneyAmount").value);
- let note=document.getElementById("moneyNote").value;
-
- if(!amount)return;
-
- money.push({type,amount,note});
-
- save();
- renderMoney();
- updateDashboard();
-
- document.getElementById("moneyAmount").value="";
- document.getElementById("moneyNote").value="";
-}
-
-function renderMoney(){
-
- let html="";
-
- money.forEach((x,i)=>{
- html+=`
- <tr>
- <td>${x.type}</td>
- <td>${x.amount}</td>
- <td>${x.note}</td>
- <td>
- <button class="danger"
- onclick="deleteMoney(${i})">
- Delete
- </button>
- </td>
- </tr>`;
- });
-
- document.getElementById("moneyTable").innerHTML=html;
-}
-
-function deleteMoney(i){
- money.splice(i,1);
- save();
- renderMoney();
- updateDashboard();
-}
-
-function updateDashboard(){
-
- let income=0;
- let expense=0;
-
- money.forEach(x=>{
-   if(x.type==="income") income+=x.amount;
-   else expense+=x.amount;
- });
-
- document.getElementById("landCount").innerText=lands.length;
- document.getElementById("incomeTotal").innerText=income;
- document.getElementById("expenseTotal").innerText=expense;
- document.getElementById("balance").innerText=income-expense;
-}
-
-function calculate(){
-
- let l=Number(document.getElementById("length").value);
- let w=Number(document.getElementById("width").value);
-
- document.getElementById("result").innerText=
- "Result: "+(l*w);
-}
-
-function backup(){
-
- let data={
-   lands:lands,
-   money:money
- };
-
- let blob=new Blob(
-   [JSON.stringify(data,null,2)],
-   {type:"application/json"}
- );
-
- let a=document.createElement("a");
- a.href=URL.createObjectURL(blob);
- a.download="Abrar-Khaskheli-Backup.json";
- a.click();
-}
-
-function restore(event){
-
- let file=event.target.files[0];
- if(!file)return;
-
- let reader=new FileReader();
-
- reader.onload=function(e){
-
-   try{
-
-     let data=JSON.parse(e.target.result);
-
-     lands=data.lands||[];
-     money=data.money||[];
-
-     save();
-     renderLand();
-     renderMoney();
-     updateDashboard();
-
-     alert("Backup restored successfully");
-
-   }catch(err){
-     alert("Invalid backup file");
-   }
- };
-
- reader.readAsText(file);
-}
-
-function setPin(){
-
- let p=document.getElementById("pin").value;
-
- if(p.length<4){
-   alert("PIN must be at least 4 digits");
-   return;
- }
-
- localStorage.setItem("portalPin",p);
-
- alert("PIN saved successfully");
- document.getElementById("pin").value="";
-}
-
-function searchWeb(){
-
- let q=document.getElementById("portalSearch").value.trim();
-
- if(q){
-   window.open(
-     "https://www.google.com/search?q="+
-     encodeURIComponent(q),
-     "_blank"
-   );
- }
-}
-
-function changeLanguage(){
-
- let lang=document.getElementById("language").value;
- let t=text[lang];
-
- document.documentElement.lang=lang;
- document.documentElement.dir=lang==="en"?"ltr":"rtl";
-
- document.getElementById("title").innerText=t.title;
- document.getElementById("subtitle").innerText=t.subtitle;
- document.getElementById("dashboard").innerText=t.dashboard;
- document.getElementById("landTitle").innerText=t.land;
- document.getElementById("incomeText").innerText=t.income;
- document.getElementById("expenseText").innerText=t.expense;
- document.getElementById("balanceText").innerText=t.balance;
- document.getElementById("calcTitle").innerText=t.calc;
- document.getElementById("moneyTitle").innerText=t.money;
- document.getElementById("addLandBtn").innerText=t.add;
-
- document.getElementById("search").placeholder=t.search;
-}
-
-function onlineStatus(){
-
- let box=document.getElementById("offline");
-
- box.style.display=navigator.onLine?"none":"block";
-}
-
-window.addEventListener("online",onlineStatus);
-window.addEventListener("offline",onlineStatus);
-
-renderLand();
-renderMoney();
-updateDashboard();
-changeLanguage();
-onlineStatus();
-
-if("serviceWorker" in navigator){
- navigator.serviceWorker.register("sw.js")
- .catch(()=>{});
-}
-
+})();
 </script>
+"""
+if "v8-offline-js" not in html:
+    html=html.replace("</body>",js+"</body>",1)
 
-</body>
-</html>
-```
+with open(index,"w",encoding="utf-8") as f:f.write(html)
+
+# Robust offline-first service worker: precache all local portal assets and
+# fall back to cache whenever network is unavailable.
+sw=os.path.join(work,"sw.js")
+assets=[]
+for root,_,files in os.walk(work):
+    for n in files:
+        rel=os.path.relpath(os.path.join(root,n),work).replace("\\","/")
+        if rel!="sw.js":
+            assets.append("./"+rel)
+
+cache_list=json.dumps(assets,ensure_ascii=False)
+sw_code=f"""const CACHE='ak-portal-v8-offline';
+const ASSETS={cache_list};
+self.addEventListener('install',event=>event.waitUntil(
+  caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())
+));
+self.addEventListener('activate',event=>event.waitUntil(
+  caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())
+));
+self.addEventListener('fetch',event=>{{
+  if(event.request.method!=='GET') return;
+  event.respondWith(
+    caches.match(event.request).then(cached=>cached || fetch(event.request).then(response=>{{
+      const copy=response.clone();
+      caches.open(CACHE).then(cache=>cache.put(event.request,copy)).catch(()=>{{}});
+      return response;
+    }}).catch(()=>caches.match('./index.html')))
+  );
+}});
+"""
+with open(sw,"w",encoding="utf-8") as f:f.write(sw_code)
+
+with zipfile.ZipFile(out,"w",zipfile.ZIP_DEFLATED) as z:
+    for root,_,files in os.walk(work):
+        for n in files:
+            p=os.path.join(root,n); z.write(p,os.path.relpath(p,work))
+shutil.rmtree(work)
+print(out)
